@@ -1,3 +1,4 @@
+/*
 package main
 
 import (
@@ -289,3 +290,6 @@ func intPtr(in int) *int {
 func strPtr(in string) *string {
 	return &in
 }
+
+
+*/
