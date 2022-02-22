@@ -105,6 +105,11 @@ func (p predicateTemplater) templateForModel(name string, model resourcemanager.
 	for _, fieldName := range fieldNames {
 		fieldVal := model.Fields[fieldName]
 
+		// it's a fixed value so filtering on it's not going to do much
+		if fieldVal.FixedValue != nil {
+			continue
+		}
+
 		typeInfo, err := golangTypeNameForObjectDefinition(fieldVal.ObjectDefinition)
 		if err != nil {
 			return nil, fmt.Errorf("determining type information for field %q in model %q with info %q: %+v", fieldName, name, string(fieldVal.ObjectDefinition.Type), err)

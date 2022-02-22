@@ -83,6 +83,12 @@ func (c modelsTemplater) structCode(data ServiceGeneratorData) (*string, error) 
 	structLines := make([]string, 0)
 	for _, fieldName := range fields {
 		fieldDetails := c.model.Fields[fieldName]
+
+		// there's a single value available so making the user specify it is unnecessary
+		if fieldDetails.FixedValue != nil {
+			continue
+		}
+
 		fieldTypeName := "FIXME"
 		fieldTypeVal, err := golangTypeNameForObjectDefinition(fieldDetails.ObjectDefinition)
 		if err != nil {
@@ -308,7 +314,23 @@ func (c modelsTemplater) dateFunctionForField(fieldName string, fieldDetails res
 }
 
 func (c modelsTemplater) codeForMarshalFunctions(data ServiceGeneratorData) (*string, error) {
-	output := ""
+	fieldsContainingFixedValues, err := c.findFieldsContainingFixedValues(data)
+	if err != nil {
+		return nil, fmt.Errorf("finding fields containing fixed values: %+v", err)
+	}
+
+	if c.model.TypeHintValue == nil && (fieldsContainingFixedValues == nil || len(*fieldsContainingFixedValues) == 0) {
+		out := ""
+		return &out, nil
+	}
+
+	lines := make([]string, 0)
+
+	if fieldsContainingFixedValues != nil && len(*fieldsContainingFixedValues) > 0 {
+		for k, v := range *fieldsContainingFixedValues {
+			lines = append(lines, fmt.Sprintf("decoded[%[1]q] = %[2]q", k, v))
+		}
+	}
 
 	if c.model.TypeHintValue != nil {
 		if c.model.TypeHintIn == nil {
@@ -329,7 +351,12 @@ func (c modelsTemplater) codeForMarshalFunctions(data ServiceGeneratorData) (*st
 			return nil, fmt.Errorf("the field %q was not found on the parent model %q for model %q", *c.model.TypeHintIn, *c.model.ParentTypeName, c.name)
 		}
 
-		output = fmt.Sprintf(`
+		lines = append(lines, fmt.Sprintf("decoded[%[1]q] = %[2]q", field.JsonName, *c.model.TypeHintValue))
+	}
+
+	sort.Strings(lines)
+
+	out := fmt.Sprintf(`
 var _ json.Marshaler = %[1]s{}
 
 func (s %[1]s) MarshalJSON() ([]byte, error) {
@@ -344,7 +371,7 @@ func (s %[1]s) MarshalJSON() ([]byte, error) {
 	if err := json.Unmarshal(encoded, &decoded); err != nil {
 		return nil, fmt.Errorf("unmarshaling %[1]s: %%+v", err)
 	}
-	decoded[%[2]q] = %[3]q
+	%[2]s
 
 	encoded, err = json.Marshal(decoded)
 	if err != nil {
@@ -353,10 +380,8 @@ func (s %[1]s) MarshalJSON() ([]byte, error) {
 
 	return encoded, nil
 }
-`, c.name, field.JsonName, *c.model.TypeHintValue)
-	}
-
-	return &output, nil
+`, c.name, strings.Join(lines, "\n"))
+	return &out, nil
 }
 
 func (c modelsTemplater) codeForUnmarshalFunctions(data ServiceGeneratorData) (*string, error) {
@@ -617,4 +642,33 @@ func (s *%[1]s) UnmarshalJSON(bytes []byte) error {`, c.name))
 
 	output := strings.Join(lines, "\n")
 	return &output, nil
+}
+
+func (c modelsTemplater) findFieldsContainingFixedValues(data ServiceGeneratorData) (*map[string]string, error) {
+	out := make(map[string]string)
+
+	for k, v := range c.model.Fields {
+		if v.FixedValue == nil {
+			continue
+		}
+
+		out[k] = *v.FixedValue
+	}
+
+	if c.model.ParentTypeName != nil {
+		parent, ok := data.models[*c.model.ParentTypeName]
+		if ok {
+			return nil, fmt.Errorf("parent model %q was not found", *c.model.ParentTypeName)
+		}
+
+		for k, v := range parent.Fields {
+			if v.FixedValue == nil {
+				continue
+			}
+
+			out[k] = *v.FixedValue
+		}
+	}
+
+	return &out, nil
 }
