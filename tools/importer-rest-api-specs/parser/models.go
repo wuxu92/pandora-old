@@ -60,11 +60,14 @@ func (d *SwaggerDefinition) findConstantsWithinModel(fieldName string, input spe
 	result.append(known)
 
 	if len(input.Enum) > 0 {
-		constant, err := mapConstant(input.Type, fieldName, input.Enum, input.Extensions)
-		if err != nil {
-			return nil, fmt.Errorf("parsing constant: %+v", err)
+		isFixedValue := len(input.Enum) == 1 && input.Type.Contains("string")
+		if !isFixedValue {
+			constant, err := mapConstant(input.Type, fieldName, input.Enum, input.Extensions)
+			if err != nil {
+				return nil, fmt.Errorf("parsing constant: %+v", err)
+			}
+			result.constants[constant.name] = constant.details
 		}
-		result.constants[constant.name] = constant.details
 	}
 
 	// Check any object that this model inherits from
@@ -146,6 +149,15 @@ func (d *SwaggerDefinition) detailsForField(modelName string, propertyName strin
 		ReadOnly:  value.ReadOnly, // TODO: generator should handle this in some manner?
 		Sensitive: false,          // todo: this probably needs to be a predefined list, unless there's something we can parse
 		JsonName:  propertyName,
+	}
+
+	// if it's a fixed value then pull out the single possible value
+	if len(value.Enum) == 1 && value.Type.Contains("string") {
+		fixedValue := ""
+		for _, v := range value.Enum {
+			fixedValue = v.(string)
+		}
+		field.FixedValue = &fixedValue
 	}
 
 	// first get the object definition
@@ -408,6 +420,15 @@ func (d SwaggerDefinition) parseObjectDefinition(modelName, propertyName string,
 
 	// if it's an enum then parse that out
 	if len(input.Enum) > 0 {
+		// however if it's an inlined enum and that's only got a single possible value then it's a FixedValue
+		isFixedValue := len(input.Enum) == 1 && input.Type.Contains("string")
+		if isFixedValue {
+			definition := models.ObjectDefinition{
+				Type: models.ObjectDefinitionString,
+			}
+			return &definition, &result, nil
+		}
+
 		constant, err := mapConstant(input.Type, propertyName, input.Enum, input.Extensions)
 		if err != nil {
 			return nil, nil, fmt.Errorf("parsing constant: %+v", err)

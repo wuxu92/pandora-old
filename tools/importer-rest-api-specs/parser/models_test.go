@@ -368,6 +368,83 @@ func TestParseModelSingleWithInlinedObject(t *testing.T) {
 	}
 }
 
+func TestParseModelSingleTopLevelWithFixedValue(t *testing.T) {
+	result, err := ParseSwaggerFileForTesting(t, "model_containing_fixed_value.json")
+	if err != nil {
+		t.Fatalf("parsing: %+v", err)
+	}
+	if result == nil {
+		t.Fatal("result was nil")
+	}
+	if len(result.Resources) != 1 {
+		t.Fatalf("expected 1 resource but got %d", len(result.Resources))
+	}
+
+	resource, ok := result.Resources["Discriminator"]
+	if !ok {
+		t.Fatal("the Resource 'Discriminator' was not found")
+	}
+
+	// sanity checking
+	if len(resource.Constants) != 0 {
+		t.Fatalf("expected 0 constants but got %d", len(resource.Constants))
+	}
+	if len(resource.Models) != 1 {
+		t.Fatalf("expected 1 model but got %d", len(resource.Models))
+	}
+	if len(resource.Operations) != 1 {
+		t.Fatalf("expected 1 operation but got %d", len(resource.Operations))
+	}
+	if len(resource.ResourceIds) != 1 {
+		t.Fatalf("expected 1 Resource ID but got %d", len(resource.ResourceIds))
+	}
+
+	example, ok := resource.Models["Example"]
+	if !ok {
+		t.Fatalf("the Model `Example` was not found")
+	}
+	if len(example.Fields) != 2 {
+		t.Fatalf("expected example.Fields to have 2 fields but got %d", len(example.Fields))
+	}
+
+	name, ok := example.Fields["Name"]
+	if !ok {
+		t.Fatalf("example.Fields['Name'] was missing")
+	}
+	if name.ObjectDefinition == nil {
+		t.Fatalf("example.Fields['Name'] had no ObjectDefinition")
+	}
+	if name.ObjectDefinition.Type != models.ObjectDefinitionString {
+		t.Fatalf("expected example.Fields['Name'] to be a string but got %q", string(name.ObjectDefinition.Type))
+	}
+	if name.JsonName != "name" {
+		t.Fatalf("expected example.Fields['Name'].JsonName to be 'name' but got %q", name.JsonName)
+	}
+	if name.FixedValue != nil {
+		t.Fatalf("expected example.Fields['Name'].FixedValue to not exist but got %q", *name.FixedValue)
+	}
+
+	typeName, ok := example.Fields["TypeName"]
+	if !ok {
+		t.Fatalf("example.Fields['TypeName'] was missing")
+	}
+	if typeName.ObjectDefinition == nil {
+		t.Fatalf("example.Fields['TypeName'] had no ObjectDefinition")
+	}
+	if typeName.ObjectDefinition.Type != models.ObjectDefinitionString {
+		t.Fatalf("expected example.Fields['TypeName'] to be a string but got %q", string(typeName.ObjectDefinition.Type))
+	}
+	if typeName.JsonName != "typeName" {
+		t.Fatalf("expected example.Fields['TypeName'].JsonName to be 'typeName' but got %q", typeName.JsonName)
+	}
+	if typeName.FixedValue == nil {
+		t.Fatal("expected example.Fields['TypeName'].FixedValue to exist but it didn't")
+	}
+	if *typeName.FixedValue != "OnlyOnePossibleValueForThisField" {
+		t.Fatalf("expected example.Fields['TypeName'].FixedValue to be 'OnlyOnePossibleValueForThisField' but got %q", *typeName.FixedValue)
+	}
+}
+
 func TestParseModelSingleInheritingFromObjectWithNoExtraFields(t *testing.T) {
 	result, err := ParseSwaggerFileForTesting(t, "model_inheriting_from_other_model_no_new_fields.json")
 	if err != nil {
