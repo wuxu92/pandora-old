@@ -45,6 +45,12 @@ func (userAssignedIdentityListMatcher) isMatch(_ models.FieldDetails, definition
 		// https://github.com/Azure/azure-rest-api-specs/blob/c803720c6bcfcb0fcf4c97f3463ec33a18f9e55c/specification/servicefabricmanagedclusters/resource-manager/Microsoft.ServiceFabricManagedClusters/stable/2021-05-01/nodetype.json#L763
 		// as such we're only concerned if it's defined and doesn't match
 		if strings.EqualFold(fieldName, "Type") {
+			// it's either a FixedValue, in which case the values should match else we fail
+			if fieldVal.FixedValue != nil && !strings.EqualFold(*fieldVal.FixedValue, "UserAssigned") {
+				return false
+			}
+
+			// else it's a constant
 			if fieldVal.ObjectDefinition == nil || fieldVal.ObjectDefinition.Type != models.ObjectDefinitionReference {
 				continue
 			}

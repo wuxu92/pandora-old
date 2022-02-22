@@ -42,6 +42,13 @@ func (systemAssignedIdentityMatcher) isMatch(_ models.FieldDetails, definition m
 		}
 
 		if strings.EqualFold(fieldName, "Type") {
+			// it's either a FixedValue, in which case they should match
+			if fieldVal.FixedValue != nil && strings.EqualFold(*fieldVal.FixedValue, "SystemAssigned") {
+				hasMatchingType = true
+				continue
+			}
+
+			// else it's a constant
 			if fieldVal.ObjectDefinition == nil || fieldVal.ObjectDefinition.Type != models.ObjectDefinitionReference {
 				continue
 			}
