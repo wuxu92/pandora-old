@@ -79,6 +79,11 @@ type FieldDetails struct {
 	// DateFormat is the format which should be used for this field when Type is set to DateTime
 	DateFormat *DateFormat `json:"dateFormat"`
 
+	// FixedValue specifies the fixed value which should be output for this field.
+	// Since there's only one possible value available, consideration should be taken
+	// to making this an internal-only value.
+	FixedValue *string `json:"fixedValue"`
+
 	// ForceNew specifies that this value cannot be changed in the API after creation
 	ForceNew bool `json:"forceNew"`
 
