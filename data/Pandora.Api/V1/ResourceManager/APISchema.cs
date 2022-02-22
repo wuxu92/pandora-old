@@ -187,7 +187,7 @@ public class ApiSchemaController : ControllerBase
 
         [JsonPropertyName("default")]
         public object? Default { get; set; }
-        
+
         [JsonPropertyName("fixedValue")]
         public string? FixedValue { get; set; }
 

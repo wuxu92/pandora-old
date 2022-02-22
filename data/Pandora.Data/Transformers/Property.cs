@@ -57,7 +57,7 @@ public static class Property
                 {
                     throw new NotSupportedException("FixedValues are only supported for Required properties");
                 }
-                
+
                 var dateFormat = input.GetCustomAttribute<FixedValueAttribute>();
                 definition.FixedValue = dateFormat.FixedValue;
             }
