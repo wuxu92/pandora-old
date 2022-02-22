@@ -4,6 +4,7 @@ public class PropertyDefinition
 {
     public string? DateFormat { get; set; }
     public object? Default { get; set; }
+    public string? FixedValue { get; set; }
     public bool ForceNew { get; set; }
     public bool IsTypeHint { get; set; }
     public string JsonName { get; set; }

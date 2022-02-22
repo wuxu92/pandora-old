@@ -50,6 +50,18 @@ public static class Property
                 definition.DateFormat = dateFormat.Format;
             }
 
+            if (input.HasAttribute<FixedValueAttribute>())
+            {
+                // if it's a fixed value is has to be required, else it's not fixed?
+                if (!required)
+                {
+                    throw new NotSupportedException("FixedValues are only supported for Required properties");
+                }
+                
+                var dateFormat = input.GetCustomAttribute<FixedValueAttribute>();
+                definition.FixedValue = dateFormat.FixedValue;
+            }
+
             if (input.HasAttribute<MaxItemsAttribute>())
             {
                 var attr = input.GetCustomAttribute<MaxItemsAttribute>();

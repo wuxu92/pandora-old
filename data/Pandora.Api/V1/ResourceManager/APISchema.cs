@@ -90,6 +90,7 @@ public class ApiSchemaController : ControllerBase
         {
             DateFormat = definition.DateFormat,
             Default = definition.Default,
+            FixedValue = definition.FixedValue,
             ForceNew = definition.ForceNew,
             JsonName = definition.JsonName,
             IsTypeHint = definition.IsTypeHint,
@@ -186,6 +187,9 @@ public class ApiSchemaController : ControllerBase
 
         [JsonPropertyName("default")]
         public object? Default { get; set; }
+        
+        [JsonPropertyName("fixedValue")]
+        public string? FixedValue { get; set; }
 
         // TODO: should this be renamed Immutable?
         [JsonPropertyName("forceNew")]

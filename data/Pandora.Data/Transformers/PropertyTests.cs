@@ -90,6 +90,19 @@ public static class PropertiesTests
                         continue;
                     }
 
+                case "BasicFixedValue":
+                {
+                    Assert.AreEqual("BasicFixedValue", actual.Name);
+                    Assert.AreEqual("basicFixedValue", actual.JsonName);
+                    Assert.AreEqual(ObjectType.String, actual.ObjectDefinition.Type);
+                    Assert.Null(actual.ObjectDefinition.ReferenceName);
+                    Assert.Null(actual.ObjectDefinition.NestedItem);
+                    Assert.AreEqual(false, actual.Optional);
+                    Assert.AreEqual(true, actual.Required);
+                    Assert.AreEqual("someValue", actual.FixedValue);
+                    continue;                    
+                }
+
                 case "BasicIntField":
                     {
                         Assert.AreEqual("BasicIntField", actual.Name);
@@ -491,6 +504,11 @@ public static class PropertiesTests
 
         [JsonPropertyName("basicDictionaryOfString")]
         public Dictionary<string, string> BasicDictionaryOfString { get; set; }
+        
+        [JsonPropertyName("basicFixedValue")]
+        [FixedValue("someValue")]
+        [Required]
+        public string BasicFixedValue { get; set; }
 
         [JsonPropertyName("basicLocationField")]
         public Location BasicLocationField { get; set; }
