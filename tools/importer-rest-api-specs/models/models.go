@@ -98,10 +98,11 @@ type ModelDetails struct {
 }
 
 type FieldDetails struct {
-	Required  bool
-	ReadOnly  bool
-	Sensitive bool
-	JsonName  string
+	Required   bool
+	ReadOnly   bool
+	Sensitive  bool
+	JsonName   string
+	FixedValue *string
 
 	CustomFieldType  *CustomFieldType
 	ObjectDefinition *ObjectDefinition

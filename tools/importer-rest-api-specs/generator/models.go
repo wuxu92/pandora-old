@@ -107,6 +107,10 @@ func (g PandoraDefinitionGenerator) codeForField(indentation, fieldName string, 
 
 	lines = append(lines, fmt.Sprintf("%[1]s[JsonPropertyName(%[2]q)]", indentation, field.JsonName))
 
+	if field.FixedValue != nil {
+		lines = append(lines, fmt.Sprintf("%[1]s[FixedValue(%[2]q)]", indentation, *field.FixedValue))
+	}
+
 	if isTypeHint {
 		lines = append(lines, fmt.Sprintf("%[1]s[ProvidesTypeHint]", indentation))
 	}
