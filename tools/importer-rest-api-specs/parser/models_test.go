@@ -133,6 +133,44 @@ func TestParseModelSingleTopLevel(t *testing.T) {
 	}
 }
 
+func TestParseModelParentInMultipleModels(t *testing.T) {
+	result, err := ParseSwaggerFileForTesting(t, "model_inherited_parent_in_multiple_models.json")
+	if err != nil {
+		t.Fatalf("parsing: %+v", err)
+	}
+	if result == nil {
+		t.Fatal("result was nil")
+	}
+	if len(result.Resources) != 1 {
+		t.Fatalf("expected 1 resource but got %d", len(result.Resources))
+	}
+
+	example, ok := result.Resources["Example"]
+	if !ok {
+		t.Fatalf("the resource `Example` was not found")
+	}
+
+	if len(example.Models) != 5 {
+		t.Fatalf("expected 5 models but got %d", len(example.Models))
+	}
+	var modelShouldHaveFields = func(name string, fields int) {
+		model, ok := example.Models[name]
+		if !ok {
+			t.Fatalf("expected there to be a model named %q", name)
+		}
+
+		if len(model.Fields) != fields {
+			t.Fatalf("expected the model %q to contain %d fields but got %d", name, fields, len(model.Fields))
+		}
+	}
+
+	modelShouldHaveFields("CreateWrapper", 1)
+	modelShouldHaveFields("CreateProperties", 3)
+	modelShouldHaveFields("UpdateWrapper", 2)
+	modelShouldHaveFields("UpdateProperties", 2)
+	modelShouldHaveFields("UpdatePropertiesInlinedObject", 1)
+}
+
 func TestParseModelSingleTopLevelWithInlinedModel(t *testing.T) {
 	result, err := ParseSwaggerFileForTesting(t, "model_single_with_inlined_model.json")
 	if err != nil {
