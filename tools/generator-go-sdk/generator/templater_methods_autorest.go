@@ -572,10 +572,16 @@ func (c methodsAutoRestTemplater) responderTemplate(data ServiceGeneratorData) (
 
 	steps := make([]string, 0)
 	steps = append(steps, fmt.Sprintf("azure.WithErrorUnlessStatusCode(%s)", strings.Join(expectedStatusCodes, ", ")))
+	// delcare []byte for string body
+	var bsDeclare, bsAssign string
 	if c.operation.ResponseObject != nil {
 		if discriminatedType == "" { // If this is a discriminated type with a parent interface, do not use the autorest decorator to unmarshal it
 			if c.operation.FieldContainingPaginationDetails != nil {
 				steps = append(steps, "autorest.ByUnmarshallingJSON(&respObj)")
+			} else if c.operation.ResponseObject.Type == resourcemanager.StringApiObjectDefinitionType {
+				bsDeclare = "var content []byte\n\t"
+				bsAssign = "str := string(content)\n\tresult.Model = &str\n\t"
+				steps = append(steps, "autorest.ByUnmarshallingBytes(&content)")
 			} else {
 				steps = append(steps, "autorest.ByUnmarshallingJSON(&result.Model)")
 			}
@@ -663,14 +669,15 @@ func (c %[1]s) responderFor%[2]s(resp *http.Response) (result %[2]sOperationResp
 // responderFor%[2]s handles the response to the %[2]s request. The method always
 // closes the http.Response Body.
 func (c %[1]s) responderFor%[2]s(resp *http.Response) (result %[2]sOperationResponse, err error) {
-	err = autorest.Respond(
+	%[5]serr = autorest.Respond(
 		resp,
 		%[3]s)
-	result.HttpResponse = resp
+	%[6]sresult.HttpResponse = resp
 
 	return
 }
-`, data.serviceClientName, c.operationName, strings.Join(steps, ",\n\t\t"), discriminatedType)
+`, data.serviceClientName, c.operationName, strings.Join(steps, ",\n\t\t"), discriminatedType,
+		bsDeclare, bsAssign)
 
 	return &output, nil
 }
